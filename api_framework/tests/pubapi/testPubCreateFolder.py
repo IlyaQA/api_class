@@ -69,6 +69,8 @@ class TestClass(TestCase):
             print(i)
             self.calls.create_folder(async=True, folder_name='test%s' % i)
         resp = self.calls.list_folders(folder_path=self.config.testpath)
+        while len(resp.json['folders']) != 100:
+            resp = self.calls.list_folders(folder_path=self.config.testpath)
 
         print(len(resp.json['folders']))
         assert len(resp.json['folders']) == 100
