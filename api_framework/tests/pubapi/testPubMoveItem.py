@@ -13,6 +13,7 @@ class TestClass(TestCase):
         cls.calls = Calls()
         cls.config = Config()
         cls.utils = Utils()
+        cls.utils.del_test_folder()
 
     def setUp(self):
         self.utils.delete_all_except(['Documents'])
@@ -62,3 +63,13 @@ class TestClass(TestCase):
                     assert resp.status_code == httplib.FORBIDDEN
                     assert resp.json['errorMessage'] == 'You do not have permission to perform this action'
                 self.calls.delete_folder(name='', parent_path=self.config.testpath)
+
+    def test_move_folder_into_file(self):
+        file1 = self.utils.gen_file()
+        folder = self.utils.random_name()
+        target_file_path = self.utils.form_standard_path(file1)
+        self.calls.upload(file1)
+        self.calls.create_folder(folder)
+        resp = self.calls.move_item(name=folder, destination=target_file_path)
+        assert resp.status_code == httplib.FORBIDDEN
+        assert resp.json['errorMessage'] == 'A file with the same name already exists: %s' % target_file_path

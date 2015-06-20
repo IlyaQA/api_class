@@ -13,6 +13,7 @@ class TestClass(TestCase):
         cls.calls = Calls()
         cls.config = Config()
         cls.utils = Utils()
+        cls.utils.del_test_folder()
 
     def setUp(self):
         self.utils.delete_all_except(['Documents'])

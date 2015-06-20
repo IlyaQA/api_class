@@ -466,3 +466,7 @@ class Utils:
             cmd = 'echo "%s" > %s' % (text, file_path)
             os.system(cmd)
         return file_name
+
+    def del_test_folder(self):
+        cmd = 'rm -rf %s' % self.config.testdata
+        os.system(cmd)
