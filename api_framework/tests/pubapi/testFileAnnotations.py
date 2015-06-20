@@ -1,0 +1,28 @@
+from pubapiutils import Calls
+from pubapiutils import Config
+from pubapiutils import Utils
+import httplib
+from unittest import TestCase
+
+
+class TestClass(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.no_json = 'NoJSON'
+        cls.calls = Calls()
+        cls.config = Config()
+        cls.utils = Utils()
+        cls.utils.del_test_folder()
+
+    def setUp(self):
+        self.utils.delete_all_except(['Documents'])
+
+    def test_upload_file_folder_already_exist_with_same_name(self):
+        file1 = self.utils.gen_file()
+        file1_path = self.utils.form_standard_path(file1)
+        resp = self.calls.upload(file1)
+        assert resp.status_code == httplib.OK
+        for i in range(100):
+            print(i)
+            self.calls.add_file_annotation(path=file1_path, note='test%s' % i)

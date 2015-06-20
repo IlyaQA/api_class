@@ -3,6 +3,7 @@ from pubapiutils import Config
 from pubapiutils import Utils
 import httplib
 from unittest import TestCase
+import time
 
 
 class TestClass(TestCase):
@@ -62,3 +63,12 @@ class TestClass(TestCase):
             assert resp.status_code == httplib.FORBIDDEN
             assert resp.json['errorMessage'] == 'You do not have permission to perform this action'
             self.calls.delete_folder(folder1)
+
+    def test_create_100_folders(self):
+        for i in range(100):
+            print(i)
+            self.calls.create_folder(async=True, folder_name='test%s' % i)
+        resp = self.calls.list_folders(folder_path=self.config.testpath)
+
+        print(len(resp.json['folders']))
+        assert len(resp.json['folders']) == 100

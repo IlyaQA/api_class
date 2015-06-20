@@ -8,6 +8,8 @@ import inspect
 import random
 from email.utils import formatdate
 import filecmp
+from requests_futures.sessions import FuturesSession as request
+from concurrent.futures import ThreadPoolExecutor
 
 
 class Config:
@@ -30,8 +32,41 @@ class Calls:
         self.config = Config()
         self.no_json = 'NoJSON'
 
+    def add_file_annotation(self, path, note=None, content_type='application/vnd.egnyte.annotations.request+json',
+                            accept='application/vnd.egnyte.annotations.response+json', method='POST', username=None, password=None):
+        if username is None:
+            username = self.config.admin_login
+        if password is None:
+            password = self.config.password
+
+        domain = self.config.domain
+        endpoint = '/public-api/v1/notes'
+        url = domain + endpoint
+        method = method
+        if note is None:
+            note = Utils.random_name()
+        headers = dict()
+        data = dict()
+        data['path'] = path
+        data['body'] = note
+
+        headers['Content-Type'] = content_type
+        headers['Accept'] = accept
+        headers['Authorization'] = 'Basic %s' % base64.b64encode('%s:%s' % (username, password))
+
+        data = json.dumps(data)
+
+        session = request(executor=ThreadPoolExecutor(max_workers=10))
+        r = session.request(
+                method=method,
+                url=url,
+                headers=headers,
+                data=data
+        )
+        return r
+
     def create_folder(self, folder_name, path=None, domain=None, method=None, content_type=None, accept=None,
-                      username=None, password=None, print_call=True):
+                      username=None, password=None, print_call=True, async=None):
         if domain is None:
             domain = self.config.domain
         if method is None:
@@ -46,6 +81,8 @@ class Calls:
             password = self.config.password
         if path is None:
             path = self.config.testpath
+        if async is None:
+            async = False
 
         endpoint = '/public-api/v1/fs'
         url = '%s%s%s/%s' % (domain, endpoint, path, folder_name)
@@ -58,22 +95,34 @@ class Calls:
 
         headers['Authorization'] = 'Basic %s' % base64.b64encode('%s:%s' % (username, password))
 
-        r = requests.request(
-            method=method,
-            url=url,
-            headers=headers,
-            data=data
+        if not async:
+
+            r = requests.request(
+                method=method,
+                url=url,
+                headers=headers,
+                data=data
+            )
+
+            try:
+                json_resp = json.loads(r.content)
+            except ValueError:
+                json_resp = self.no_json
+
+            r.json = json_resp
+            if print_call:
+                self.nice_print_out(call_name='Create Folder', r=r, caller=inspect.stack()[1][3])
+
+            return r
+
+        else:
+            session = request(executor=ThreadPoolExecutor(max_workers=100))
+        r = session.request(
+                method=method,
+                url=url,
+                headers=headers,
+                data=data
         )
-
-        try:
-            json_resp = json.loads(r.content)
-        except ValueError:
-            json_resp = self.no_json
-
-        r.json = json_resp
-        if print_call:
-            self.nice_print_out(call_name='Create Folder', r=r, caller=inspect.stack()[1][3])
-
         return r
 
     def delete_folder(self, name, parent_path=None, domain=None, method=None, content_type=None, accept=None,
