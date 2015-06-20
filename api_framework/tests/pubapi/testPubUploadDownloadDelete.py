@@ -36,3 +36,12 @@ class TestClass(TestCase):
         status_code, file2 = self.calls.download(file_id=group_id)
         assert status_code == httplib.OK
         assert self.utils.compare(file1, file2)
+
+    def test_upload_file_folder_already_exist_with_same_name(self):
+        folder1 = self.utils.random_name()
+        folder1_path = self.utils.form_standard_path(folder1)
+        file1 = self.utils.gen_file(file_name=folder1)
+        self.calls.create_folder(folder1)
+        resp = self.calls.upload(file1)
+        assert resp.status_code == httplib.FORBIDDEN
+        assert resp.json['message'] == 'A folder with the same name already exists: %s' % folder1_path
