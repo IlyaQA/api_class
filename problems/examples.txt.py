@@ -51,3 +51,19 @@ expect "# " { send "exit\r" }
 
 interact
 """
+
+
+"""
+desired_cap = {'os': 'Windows', 'os_version': '8', 'browser': 'Firefox', 'browser_version': '35', 'resolution': '1920x1080' }
+input_cap = {}
+
+driver = webdriver.Remote(
+    command_executor='http://<your_username>:<your_key>@hub.browserstack.com:80/wd/hub',
+    desired_capabilities=desired_cap)
+
+driver.get("https://stack251.qa-egnyte.com/corp/registration/register_trial_2.html?plan=business")
+if not "Egnyte" in driver.title:
+    raise Exception("Unable to load google page!")
+driver.find_element_by_name("txtFirstName").send_keys("Ilya")
+
+"""
