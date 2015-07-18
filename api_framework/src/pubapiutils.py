@@ -118,6 +118,7 @@ class Calls:
 
         headers['Authorization'] = 'Basic %s' % base64.b64encode('%s:%s' % (username, password))
 
+
         if not async:
 
             r = requests.request(
@@ -335,7 +336,9 @@ class Calls:
         return r
 
     def list_folders(self, folder_path, domain=None, method=None, content_type=None, accept=None, username=None,
-                     password=None, print_call=True, caller=None):
+                     password=None, print_call=True, caller=None, allow_link_type=None, perms=None, include_perm=None,
+                     list_content=None):
+
         if domain is None:
             domain = self.config.domain
         if method is None:
@@ -359,10 +362,21 @@ class Calls:
 
         headers['Authorization'] = 'Basic %s' % base64.b64encode('%s:%s' % (username, password))
 
+        params = dict()
+        if list_content is not None:
+            params['list_content'] = list_content
+        if allow_link_type is not None:
+            params['allowed_link_types'] = allow_link_type
+        if perms is not None:
+            params['perms'] = perms
+        if include_perm is not None:
+            params['include_perm'] = include_perm
+
         r = requests.request(
             method=method,
             url=url,
-            headers=headers
+            headers=headers,
+            params=params
         )
 
         try:
