@@ -10,6 +10,8 @@ from email.utils import formatdate
 import filecmp
 from requests_futures.sessions import FuturesSession as request
 from concurrent.futures import ThreadPoolExecutor
+from unittest import TestCase
+import time
 
 
 class Config:
@@ -23,26 +25,47 @@ class Config:
         self.admin_login = self.parser.get('Server', 'user')
         self.password = self.parser.get('Server', 'passwd')
         self.puser = self.parser.get('Server', 'puser')
-        self.testpath = self.parser.get('Server', 'testpath')
         self.testdata = './test_files'
 
 
+class TestCaseClass(TestCase):
+
+    def __init__(self, *args, **kwargs):
+        super(TestCaseClass, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def setUpClass(cls):
+        cls.no_json = 'NoJSON'
+        cls.config = Config()
+
+    def setUp(self):
+        self.config.testpath = '/Shared/dynamic_name_%s' % str(time.time()).replace('.', '')
+        self.utils = Utils(self.config)
+        self.calls = self.utils.calls
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.calls = Calls(cls.config)
+        cls.calls.delete_all_except('Documents')
+
+
 class Calls:
-    def __init__(self):
-        self.config = Config()
+    def __init__(self, config):
+        self.config = config
         self.no_json = 'NoJSON'
 
     def add_file_annotation(self, path, note=None, content_type='application/vnd.egnyte.annotations.request+json',
-                            accept='application/vnd.egnyte.annotations.response+json', method='POST', username=None, password=None):
+                            accept='application/vnd.egnyte.annotations.response+json', method=None, username=None, password=None):
         if username is None:
             username = self.config.admin_login
         if password is None:
             password = self.config.password
+        if method is None:
+            method = method
 
         domain = self.config.domain
         endpoint = '/public-api/v1/notes'
         url = domain + endpoint
-        method = method
         if note is None:
             note = Utils.random_name()
         headers = dict()
@@ -58,10 +81,10 @@ class Calls:
 
         session = request(executor=ThreadPoolExecutor(max_workers=10))
         r = session.request(
-                method=method,
-                url=url,
-                headers=headers,
-                data=data
+            method=method,
+            url=url,
+            headers=headers,
+            data=data
         )
         return r
 
@@ -465,11 +488,26 @@ class Calls:
         else:
             print('\nNo body in the response.')
 
+    def delete_all_except(self, l):
+        resp = self.list_folders(folder_path='/Shared', caller='Cleanup')
+        l1 = resp.json
+
+        for i in range(len(l1['folders'])):
+            if l1['folders'][i]['name'] in l:
+                l1['folders'][i] = None
+
+        while l1['folders'].count(None) != len(l1['folders']):
+            for elem in l1['folders']:
+                if elem is not None:
+                    self.delete_folder(parent_path='/Shared', name=elem['name'], caller='Cleanup')
+                    index = l1['folders'].index(elem)
+                    del l1['folders'][index]
+
 
 class Utils:
-    def __init__(self):
-        self.config = Config()
-        self.calls = Calls()
+    def __init__(self, config):
+        self.config = config
+        self.calls = Calls(config)
 
     @staticmethod
     def random_name():

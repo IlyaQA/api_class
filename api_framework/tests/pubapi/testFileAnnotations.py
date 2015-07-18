@@ -1,22 +1,8 @@
-from pubapiutils import Calls
-from pubapiutils import Config
-from pubapiutils import Utils
 import httplib
-from unittest import TestCase
+from pubapiutils import TestCaseClass
 
 
-class TestClass(TestCase):
-
-    @classmethod
-    def setUpClass(cls):
-        cls.no_json = 'NoJSON'
-        cls.calls = Calls()
-        cls.config = Config()
-        cls.utils = Utils()
-        cls.utils.del_test_folder()
-
-    def setUp(self):
-        self.utils.delete_all_except(['Documents'])
+class TestClass(TestCaseClass):
 
     def test_upload_file_folder_already_exist_with_same_name(self):
         file1 = self.utils.gen_file()
