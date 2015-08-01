@@ -6,4 +6,11 @@ def f(n):
     else:
         return f(n-1) + f(n-2)
 
-print(f(10))
+
+def seq(n):
+    l = []
+    for i in range(n):
+        l.append(f(i))
+    return l
+
+print(seq(16))
