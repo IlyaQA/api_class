@@ -142,10 +142,10 @@ class Calls:
         else:
             session = request(executor=ThreadPoolExecutor(max_workers=100))
         r = session.request(
-                method=method,
-                url=url,
-                headers=headers,
-                data=data
+            method=method,
+            url=url,
+            headers=headers,
+            data=data
         )
         return r
 
@@ -175,7 +175,6 @@ class Calls:
         headers = dict()
         headers['Content-Type'] = content_type
         headers['Accept'] = accept
-
         headers['Authorization'] = 'Basic %s' % base64.b64encode('%s:%s' % (username, password))
 
         r = requests.request(
